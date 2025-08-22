@@ -2,7 +2,7 @@
 # If defined, the resulting binary will be named this.
 # Otherwise, it will be named as ${MAIN}.
 # So, if we have no main, THIS MUST BE SET.
-PROJECT_NAME					:= filesystem_test
+PROJECT_NAME					:= libsystemhelpers.a
 
 # If set, this path will be seached for source files (excluding MAIN)
 # 
@@ -17,27 +17,22 @@ SRC_PATH 						:=
 # with or without sub-folders, and want to add them to the build.
 #
 # The object paths of each one will be ${OBJS_PATH}/{SRCS.entry}
-MORE_SRCS 						:= 
+MORE_SRCS 						:= SystemHelpers.cpp
 
 # The main source file, if any. If none, we assume this is a library.
-MAIN_SRC						:= FilesystemTests.cpp
+MAIN_SRC						:= 
 
 # Dependencies (Must have their own Makefile)
 DEPS							:= 
 
 # Header paths to include in headers search
-INCLUDE							:= . ANSI FilesystemHelpers Log
-INCLUDE 						+= SystemHelpers
+INCLUDE							:= .
 
-# Libs paths to include in libraries search (both static and dynamic)
-LIBS_PATHS 						:= ANSI/build/linux Log/build/linux
-LIBS_PATHS 						+= SystemHelpers/build/linux
-LIBS_PATHS 						+= FilesystemHelpers/build/linux
-LIBS_PATHS 						+= StringHelpers/build/linux
+# Libs paths to include in libraries search
+LIBS_PATHS 						:= 
 
-# Libraries to link with (libwhatever.so and libwhatever.a)
-LIBS							:= ansi log systemhelpers filesystemhelpers
-LIBS 							+= stringhelpers
+# Dynamic libraries to link
+LIBS							:= 
 
 # Where to build things
 BUILD_PATH						:= build
@@ -248,8 +243,9 @@ ifneq (${MORE_SRCS},)
 endif
 
 INCLUDE_FLAGS					:= $(call INCLUDE_FLAGS_FROM,${INCLUDE})
-LINK_PATHS_FLAGS				:= $(call LIBS_PATHS_FLAGS_FROM,${LIBS_PATHS})
-LINK_FLAGS						:= $(call LIBS_FLAGS_FROM,${LIBS})
+
+LINK_FLAGS						:= $(call LIBS_PATHS_FLAGS_FROM,${LIBS_PATHS})
+LINK_FLAGS						+= $(call LIBS_FLAGS_FROM,${LIBS})
 
 C_FLAGS 						:= ${C_CXX_FLAGS} ${C_FLAGS}
 CXX_FLAGS 						:= ${C_CXX_FLAGS} ${CXX_FLAGS}
@@ -291,10 +287,10 @@ endif
 ${EXEC}: ${BUILD_PATH} ${MAIN_OBJ} ${OBJS} ${MORE_OBJS}
 ifeq ($(suffix ${MAIN_SRC}),.c)
 	${C} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} \
-		 -o $@ ${LINK_PATHS_FLAGS} ${LINK_FLAGS} ${C_FLAGS}
+		 -o $@ ${LINK_FLAGS} ${C_FLAGS}
 else
 	${CXX} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} \
-		   -o $@ ${LINK_PATHS_FLAGS} ${LINK_FLAGS} ${CXX_FLAGS}
+		   -o $@ ${LINK_FLAGS} ${CXX_FLAGS}
 endif
 
 
@@ -362,9 +358,8 @@ info:
 	$(info INCLUDE_FLAGS: ${INCLUDE_FLAGS})
 
 	$(info LIBS_PATHS: ${LIBS_PATHS})
-	$(info LINK_PATHS_FLAGS: ${LINK_PATHS_FLAGS})
-
 	$(info LIBS: ${LIBS})
+	
 	$(info LINK_FLAGS: ${LINK_FLAGS})
 	
 	$(info DEPS: ${DEPS})
