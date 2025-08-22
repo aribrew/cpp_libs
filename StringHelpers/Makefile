@@ -2,7 +2,7 @@
 # If defined, the resulting binary will be named this.
 # Otherwise, it will be named as ${MAIN}.
 # So, if we have no main, THIS MUST BE SET.
-PROJECT_NAME					:= StringHelpers
+PROJECT_NAME					:= libstringhelpers.a
 
 # If set, this path will be seached for source files (excluding MAIN)
 # 
@@ -21,9 +21,6 @@ MORE_SRCS 						:= StringHelpers.cpp
 
 # The main source file, if any. If none, we assume this is a library.
 MAIN_SRC						:= 
-
-# If 1, and if we have no main, a dynamic library will be built
-IS_DYNAMIC_LIBRARY				:= 0
 
 # Dependencies (Must have their own Makefile)
 DEPS							:= 
@@ -78,21 +75,11 @@ endif
 
 
 ############################### Functions ####################################
-# ${1}: What to build
-# ${2}: Resulting file
-# ${3}: Compiler
-# ${4}: Flags
-define BUILD
-${3} ${1} -o ${2} ${4}
-endef
-
-
 # ${1}: What to find
 # ${2}: Where
 define FIND
 $(shell find -L ${2}/** -type f -name ${1})
 endef
-
 
 # ${1}: What to find
 # ${2}: Where
@@ -101,24 +88,20 @@ define FIND_EXCLUDING
 $(shell find -L ${2}/** -type f -name ${1} -not -name ${3})
 endef
 
-
 # ${1}: A list of paths with headers
 define INCLUDE_FLAGS_FROM
 $(strip $(foreach path,${1},-I ${path}))
 endef
-
 
 # ${1}: A list of dynamic library names
 define LIBS_FLAGS_FROM
 $(strip $(foreach lib,${1},-l${lib}))
 endef
 
-
 # ${1}: A list of paths with libraries
 define LIBS_PATHS_FLAGS_FROM
 $(strip $(foreach path,${1},-L ${path}))
 endef
-
 
 # Obtains the paths of all provided files.
 # The sort function also removes duplicates.
@@ -127,13 +110,11 @@ define PATHS_OF
 $(sort $(foreach file,${1},$(dir ${file})))
 endef
 
-
 # Obtains the .o file path from the given source file
 # ${1}: Source file
 define SRC2OBJ
 $(subst .c,.o,$(subst .cpp,.o,${1}))
 endef
-
 
 # Obtains a list of all folders below this one
 # ${1}: Path
@@ -151,15 +132,13 @@ endef
 # ${1}: The path where the source files are located
 ifneq (${MAIN},)
 define FIND_SOURCES
-$(strip $(call FIND_EXCLUDING,"*.c",${1},${MAIN_SRC})$\
-		$(call FIND_EXCLUDING,"*.cpp",${1},${MAIN_SRC}))
+	$(strip $(call FIND_EXCLUDING,"*.c",${1},${MAIN_SRC})$\
+			$(call FIND_EXCLUDING,"*.cpp",${1},${MAIN_SRC}))
 endef
-
 else
-
 define FIND_SOURCES
-$(strip $(call FIND_EXCLUDING,"*.c",${1},"main.c")$\
-		$(call FIND_EXCLUDING,"*.cpp",${1},"main.cpp"))
+	$(strip $(call FIND_EXCLUDING,"*.c",${1},"main.c")$\
+			$(call FIND_EXCLUDING,"*.cpp",${1},"main.cpp"))
 endef
 endif
 
@@ -169,10 +148,21 @@ $(strip $(call FIND,"*.c",${1})$\
 		$(call FIND,"*.cpp",${1}))
 endef
 
-
 # ${1}: Source files list
 define OBJSFROM
 $(foreach src,${1},$(call SRC2OBJ,${src}))
+endef
+
+
+################################# Messages ###################################
+define ERROR__NO_MAIN_AND_NO_LIB
+$(info If there is no MAIN, PROJECT_NAME must name a)
+$(info static library (libwhatever.a) or a dynamic)
+$(info one (libwhatever.so))
+endef
+
+define ERROR__NO_MAIN_AND_NO_PROJECTNAME
+$(info If you have no MAIN_SRC you MUST specify a PROJECT_NAME)
 endef
 ##############################################################################
 
@@ -199,31 +189,39 @@ OBJS_PATH						:= ${OBJS_PATH}/${SYSTEM}
 
 
 # If MAIN has been set
-ifneq (${MAIN},)
-	EXEC						:= ${BUILD_PATH}
+ifneq (${MAIN_SRC},)
+	EXEC						:= ${BUILD_PATH}/
 	
 	ifeq (${PROJECT_NAME},)
 		# The executable will be named as ${MAIN}
-		EXEC					+= /$(basename $(notdir ${MAIN_SRC}))
+		EXEC					+= $(basename $(notdir ${MAIN_SRC}))
 	else
 		# The executable will be named as ${PROJECT_NAME}
-		EXEC					:= ${BUILD_PATH}/${PROJECT_NAME}
+		EXEC					+= ${PROJECT_NAME}
 	endif
 
 	ifeq (${SYSTEM},windows)
 		# Name the excutable to be a Windows executable
 		EXEC					+= .exe
 	endif
+
+	EXEC						:= $(subst / ,/,${EXEC})
 else
 	# If we have no MAIN, we need a PROJECT_NAME for the binary
     ifneq (${PROJECT_NAME},)
-    	ifeq (${IS_DYNAMIC_LIBRARY},0)
-    		LIBRARY				:= lib${PROJECT_NAME}.a
-    	else
-    		LIBRARY				:= lib${PROJECT_NAME}.so
+    	# If we have a PROJECT_NAME and are building a library,
+    	# the PROJECT_NAME must be named libwhatever.so or
+    	# libwhatever.a.
+    	ifneq ($(filter %.so,${PROJECT_NAME}),)
+    		ifneq ($(filter %.a,${PROJECT_NAME}),)
+    			$(call ERROR__NO_MAIN_AND_NO_LIB)
+    			exit 1
+    		endif
     	endif
+    	
+    	LIBRARY 				:= ${BUILD_PATH}/${PROJECT_NAME}
     else
-    	$(info If you have no MAIN you MUST specify a PROJECT_NAME)
+    	$(call ERROR__NO_MAIN_AND_NO_PROJECTNAME)
     	exit 1
     endif
 endif
@@ -231,7 +229,7 @@ endif
 
 ifneq (${MAIN_SRC},)
 	MAIN_OBJ					:= $(call SRC2OBJ,${MAIN_SRC})
-	MAIN_OBJ					:= ${OBJS_PATH}/$(notdir ${MAIN_SRC})
+	MAIN_OBJ					:= ${OBJS_PATH}/$(notdir ${MAIN_OBJ})
 endif
 
 ifneq (${SRC_PATH},)
@@ -267,14 +265,6 @@ clean:
 	rm -rf $(dir ${BUILD_PATH})
 	rm -rf $(dir ${OBJS_PATH})
 
-ifneq (${EXEC},)
-	rm ${EXEC}
-endif
-
-ifneq (${LIBRARY},)
-	rm ${LIBRARY}
-endif
-
 
 ${OBJS_PATH}:
 	mkdir -p $@
@@ -296,16 +286,16 @@ endif
 # Builds the executable when building a program
 ${EXEC}: ${BUILD_PATH} ${MAIN_OBJ} ${OBJS} ${MORE_OBJS}
 ifeq ($(suffix ${MAIN_SRC}),.c)
-	${C} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} $\
+	${C} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} \
 		 -o $@ ${LINK_FLAGS} ${C_FLAGS}
 else
-	${CXX} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} $\
+	${CXX} ${OBJS} ${MORE_OBJS} ${MAIN_OBJ} \
 		   -o $@ ${LINK_FLAGS} ${CXX_FLAGS}
 endif
 
 
 # Builds the library
-${BUILD_PATH}/${LIBRARY}: ${BUILD_PATH} ${OBJS} ${MORE_OBJS}
+${LIBRARY}: ${BUILD_PATH} ${OBJS} ${MORE_OBJS}
 	${AR} ${AR_FLAGS} $@ ${OBJS} ${MORE_OBJS}
 
 
