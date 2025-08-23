@@ -21,10 +21,11 @@ String Log::replacePlaceholders (const char* message,
     for (it = params.begin(); it != params.end(); it ++)
     {
         String param = String (*it);
+        const char* pStr = StringHelpers::IntToStr(p).c_str();
 
         String placeholder = StringHelpers::Concat ({
             "${", 
-            StringHelpers::IntToStr(p).c_str(), 
+            pStr,
             "}"
         }, "");
 
