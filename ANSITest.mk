@@ -2,7 +2,7 @@
 # If defined, the resulting binary will be named this.
 # Otherwise, it will be named as ${MAIN}.
 # So, if we have no main, THIS MUST BE SET.
-PROJECT_NAME					:= log_test
+PROJECT_NAME					:= ansi_test
 
 # If set, this path will be seached for source files (excluding MAIN)
 # 
@@ -20,20 +20,19 @@ SRC_PATH 						:=
 MORE_SRCS 						:= 
 
 # The main source file, if any. If none, we assume this is a library.
-MAIN_SRC						:= LogTest.cpp
+MAIN_SRC						:= ANSITest.cpp
 
 # Dependencies (Must have their own Makefile)
 DEPS							:= 
 
 # Header paths to include in headers search
-INCLUDE							:= . Log
+INCLUDE							:= ANSI
 
 # Libs paths to include in libraries search (both static and dynamic)
-LIBS_PATHS 						:= StringHelpers/build/linux
-LIBS_PATHS 						+= ANSI/build/linux Log/build/linux
+LIBS_PATHS 						:= ANSI/build/linux
 
 # Libraries to link with (libwhatever.so and libwhatever.a)
-LIBS							:= stringhelpers ansi log
+LIBS							:= ansi
 
 # Where to build things
 BUILD_PATH						:= build
