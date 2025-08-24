@@ -1,7 +1,7 @@
 # If defined, the resulting binary will be named this.
 # Otherwise, it will be named as ${MAIN}.
 # So, if we have no main, THIS MUST BE SET.
-PROJECT_NAME					:= filesystem_test
+PROJECT_NAME					:= event_tests
 
 # If set, this path will be seached for source files (excluding MAIN)
 # 
@@ -22,29 +22,16 @@ MORE_SRCS 						:=
 #
 # You must put the full path to your main source file, because it may be
 # in SRC_PATH root or can be elsewhere...
-MAIN_SRC						:= FilesystemTests.cpp
+MAIN_SRC						:= EventTest.cpp
 
 # Header paths to include in headers search
 INCLUDE							:= .
-INCLUDE 						+= FilesystemHelpers
-INCLUDE							+= Log
-INCLUDE 						+= ANSI
-INCLUDE 						+= StringHelpers
-INCLUDE 						+= SystemHelpers
 
 # Libs paths to include in libraries search (both static and dynamic)
-LIBS_PATHS 						:= FilesystemHelpers/build/linux
-LIBS_PATHS 						+= Log/build/linux
-LIBS_PATHS 						+= ANSI/build/linux
-LIBS_PATHS 						+= StringHelpers/build/linux
-LIBS_PATHS 						+= SystemHelpers/build/linux
+LIBS_PATHS 						:= 
 
 # Libraries to link with (libwhatever.so and libwhatever.a)
-LIBS							:= filesystemhelpers
-LIBS 							+= log
-LIBS 							+= ansi
-LIBS 							+= stringhelpers
-LIBS 							+= systemhelpers
+LIBS							:= 
 
 # Where to build things
 BUILD_PATH						:= build
